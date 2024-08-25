@@ -1,0 +1,48 @@
+
+module testing_proc;
+
+reg clk1,clk2;
+wire [31:0]Z;
+integer k,g;
+
+PIPE_MIPS32 dut(clk1,clk2,Z);
+
+initial 
+begin
+ clk1 = 0; clk2 = 0;
+ repeat(20)
+ begin
+ #5 clk1 = 1;#5 clk1 = 0;
+ #5 clk2 = 1;#5 clk2 = 0;
+ end 
+ end
+ 
+ 
+ initial 
+ begin
+    for (k=0; k<31; k=k+1)
+    PIPE_MIPS32.REGISTER[k] = k ;
+    
+     PIPE_MIPS32.MEMORY[0] = 32'h2801000a;// ADDI R1,R0,10 first instruction 
+     PIPE_MIPS32.MEMORY[1] = 32'h28020014;// ADDI R2,R0,20 second 
+     PIPE_MIPS32.MEMORY[2] = 32'h28030019;// ADDI R3,R0,25 third 
+     PIPE_MIPS32.MEMORY[3] = 32'h00222000;// ADD R4,R1,R2 fourth 
+     PIPE_MIPS32.MEMORY[4] = 32'h0ce73800;//  OR R7,R7,R7 dummy INST fifth 
+     PIPE_MIPS32.MEMORY[5] = 32'h00832800;//ADD R5,R4,R3 sixth 
+     PIPE_MIPS32.MEMORY[6] = 32'hfc000000;//HLT seventh halt instruction
+     
+     PIPE_MIPS32.HALTED = 0;
+     PIPE_MIPS32.PC = 0; //SET PC TO ZERO 
+     PIPE_MIPS32.TAKEN_BRANCH = 0;
+     
+     #280 
+     for (g=0; g<6; g=g+1)
+     $display ("R[%d] = %d ", g,  PIPE_MIPS32.REGISTER[g]);
+     end
+     
+     initial 
+     begin
+     #300 $finish ;
+     end
+     endmodule 
+     
